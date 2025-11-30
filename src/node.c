@@ -47,10 +47,6 @@ int __try_slow_path(struct node_ctx *ctx, uint32_t target_slot) {
 
 int64_t fetch_and_add(struct node_ctx *ctx) {
     struct rdma_ctx *r = &ctx->r;
-#ifdef DEBUG
-    static __thread uint64_t call_count = 0;
-    uint64_t this_call = ++call_count;
-#endif
     while (1) {
         /* Get assigned slot */
         uint64_t my_slot = rdma_get_next_slot(r);

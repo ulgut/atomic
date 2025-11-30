@@ -101,12 +101,14 @@ void *client_service_thread(void *arg) {
 
     if (bind(serverfd, (struct sockaddr *)&server_addr, sizeof(server_addr)) <
         0) {
+        DEBUG_LOG("Could not bind to [%d:%d]", htonl(host_ip), htons(service_port));
         perror("bind");
         close(serverfd);
         return NULL;
     }
 
     if (listen(serverfd, 100) < 0) {
+        DEBUG_LOG("Failed to listen to [%d:%d] on fd[%d]", htonl(host_ip), htons(service_port), serverfd);
         perror("listen");
         close(serverfd);
         return NULL;
