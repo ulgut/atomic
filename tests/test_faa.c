@@ -1,6 +1,8 @@
 #define _GNU_SOURCE
 #include <assert.h>
 #include <stdlib.h>
+#include <pthread.h>
+#include <errno.h>
 
 #include "net_map.h"
 #include "node.h"
