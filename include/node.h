@@ -28,7 +28,7 @@ int64_t fetch_and_add(struct node_ctx *ctx);
 int64_t test_and_set(struct node_ctx *ctx, uint32_t slot);
 
 /* Refined TAS operation */
-int64_t test_and_set(struct node_ctx *ctx);
+int64_t test_and_set_v2(struct node_ctx *ctx);
 /* Refined Reset operation */
 int64_t reset(struct node_ctx *ctx);
 /* Performs a quorum read across replicas to fetch maximum frontier slot. */

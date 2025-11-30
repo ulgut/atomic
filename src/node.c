@@ -113,7 +113,7 @@ int64_t test_and_set(struct node_ctx *ctx, uint32_t slot) {
     return -1;
 }
 
-int64_t test_and_set(struct node_ctx *ctx) {
+int64_t test_and_set_v2(struct node_ctx *ctx) {
     // TODO
     return ctx->id;
 }

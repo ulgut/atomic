@@ -11,55 +11,58 @@
 
 static const struct node_config net_cfg[] = {
     {
-        .ip = {2, 1, 10, 10},
+        // 10.10.1.1 – node 0
+        .ip = {10, 10, 1, 1},
         .id = 0,
         .tcp_port = TCP_PORT,
         .ib_port = IB_PORT,
         .gid_index = GID_IDX,
     },
     {
-        .ip = {3, 1, 10, 10},
+        // 10.10.1.2 – node 1
+        .ip = {10, 10, 1, 2},
         .id = 1,
         .tcp_port = TCP_PORT,
         .ib_port = IB_PORT,
         .gid_index = GID_IDX,
     },
     {
-        .ip = {4, 1, 10, 10},
+        // 10.10.1.3 – node 2
+        .ip = {10, 10, 1, 3},
         .id = 2,
         .tcp_port = TCP_PORT,
         .ib_port = IB_PORT,
         .gid_index = GID_IDX,
-    },
-    {
-        .ip = {5, 1, 10, 10},
-        .id = 3,
-        .tcp_port = TCP_PORT,
-        .ib_port = IB_PORT,
-        .gid_index = GID_IDX,
-    },
-    {
-        .ip = {6, 1, 10, 10},
-        .id = 4,
-        .tcp_port = TCP_PORT,
-        .ib_port = IB_PORT,
-        .gid_index = GID_IDX,
-    },
+    }
+    // {
+    //     .ip = {5, 1, 10, 10},
+    //     .id = 3,
+    //     .tcp_port = TCP_PORT,
+    //     .ib_port = IB_PORT,
+    //     .gid_index = GID_IDX,
+    // },
+    // {
+    //     .ip = {6, 1, 10, 10},
+    //     .id = 4,
+    //     .tcp_port = TCP_PORT,
+    //     .ib_port = IB_PORT,
+    //     .gid_index = GID_IDX,
+    // },
 
-    {
-        .ip = {7, 1, 10, 10},
-        .id = 5,
-        .tcp_port = TCP_PORT,
-        .ib_port = IB_PORT,
-        .gid_index = GID_IDX,
-    },
-    {
-        .ip = {8, 1, 10, 10},
-        .id = 6,
-        .tcp_port = TCP_PORT,
-        .ib_port = IB_PORT,
-        .gid_index = GID_IDX,
-    },
+    // {
+    //     .ip = {7, 1, 10, 10},
+    //     .id = 5,
+    //     .tcp_port = TCP_PORT,
+    //     .ib_port = IB_PORT,
+    //     .gid_index = GID_IDX,
+    // },
+    // {
+    //     .ip = {8, 1, 10, 10},
+    //     .id = 6,
+    //     .tcp_port = TCP_PORT,
+    //     .ib_port = IB_PORT,
+    //     .gid_index = GID_IDX,
+    // },
 };
 
 #endif /* NET_MAP_H */
