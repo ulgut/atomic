@@ -85,37 +85,8 @@ int64_t fetch_and_add(struct node_ctx *ctx) {
 }
 
 int64_t test_and_set(struct node_ctx *ctx, uint32_t slot) {
-    struct rdma_ctx *r = &ctx->r;
-    for (int retry_count = 0; retry_count < MAX_RETRIES; ++retry_count) {
-        // 1. Try fast path
-        int fast_res = rdma_btas(r, slot);
-        if (fast_res == 0)
-            return 0;  // this thread won
-        else if (fast_res == 1)
-            return 1;  // another thread won
-
-        // 2. Fast path failed. Try slow path
-        uint64_t ballot = gen_ballot(ctx->id);
-        int slow_res = rdma_slow_path(r, slot, ballot, 1);
-        if (slow_res == 0)
-            return 0;  // this thread won
-        else if (slow_res >= 0)
-            return 1;  // another thread won
-
-        // 3. Both paths failed. Check and retry
-        uint64_t val = *(volatile uint64_t *)&r->shared_mem->slots[slot];
-        if (val != 0) return 1;
-        if (retry_count < 3)
-            _mm_pause();
-        else
-            usleep(1);
-    }
-    return -1;
-}
-
-int64_t test_and_set_v2(struct node_ctx *ctx) {
     // TODO
-    return ctx->id;
+    return ctx->id + slot;
 }
 
 int64_t reset(struct node_ctx *ctx) {

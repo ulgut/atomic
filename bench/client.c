@@ -27,7 +27,7 @@ void *client_thread(void *arg) {
     int num_requests = args->num_requests;
     int num_nodes = sizeof(net_cfg) / sizeof(net_cfg[0]);
 
-    FAA_LOG("Client thread %d: starting with %d requests", args->thread_id,
+    DEBUG_LOG("Client thread %d: starting with %d requests", args->thread_id,
             num_requests);
 
     // Connect to all nodes
@@ -52,7 +52,7 @@ void *client_thread(void *arg) {
         }
     }
 
-    FAA_LOG("Client thread %d: connected to all nodes", args->thread_id);
+    DEBUG_LOG("Client thread %d: connected to all nodes", args->thread_id);
 
     int completed = 0;
     for (int i = 0; i < num_requests; ++i) {
@@ -71,13 +71,13 @@ void *client_thread(void *arg) {
         }
         if (result == -ENOMEM) break;
         if (++completed % 10000 == 0)
-            FAA_LOG("Client thread %d: %d requests completed", args->thread_id,
+            DEBUG_LOG("Client thread %d: %d requests completed", args->thread_id,
                     completed);
     }
 
     // Close connections
     for (int i = 0; i < num_nodes; ++i) close(sockets[i]);
-    FAA_LOG("Client thread %d: finished (%d/%d requests)", args->thread_id,
+    DEBUG_LOG("Client thread %d: finished (%d/%d requests)", args->thread_id,
             completed, num_requests);
 
     return NULL;

@@ -16,7 +16,7 @@ static inline uint64_t *get_thread_results(struct rdma_ctx *r) {
         thread_id = next_thread_id++;
         pthread_mutex_unlock(&id_mutex);
         if (thread_id >= MAX_CONCURRENT_REQ) {
-            FAA_LOG("ERROR: Too many threads. Max %d supported",
+            DEBUG_LOG("ERROR: Too many threads. Max %d supported",
                     MAX_CONCURRENT_REQ);
             return NULL;
         }
@@ -254,7 +254,7 @@ uint64_t rdma_get_next_slot(struct rdma_ctx *r) {
     struct ibv_send_wr *bad_wr;
     if (ibv_post_send(r->fqp[FRONTIER_NODE], &wr, &bad_wr)) {
         pthread_mutex_unlock(&frontier_mutex);
-        FAA_LOG("Failed to post frontier FAA");
+        DEBUG_LOG("Failed to post frontier FAA");
         return -1;
     }
 
@@ -265,7 +265,7 @@ uint64_t rdma_get_next_slot(struct rdma_ctx *r) {
     pthread_mutex_unlock(&frontier_mutex);
 
     if (wc.status != IBV_WC_SUCCESS) {
-        FAA_LOG("Frontier FAA failed: %s", ibv_wc_status_str(wc.status));
+        DEBUG_LOG("Frontier FAA failed: %s", ibv_wc_status_str(wc.status));
         return -1;
     }
 

@@ -56,3 +56,6 @@ dkms.conf
 
 cluster.txt
 *.csv
+
+# IDEs
+.idea

@@ -12,7 +12,7 @@
 
 #ifdef DEBUG
 #include <stdio.h>
-#define __FAA_LOG(fmt, ...)                                                    \
+#define __DEBUG_LOG(fmt, ...)                                                    \
   do {                                                                         \
     time_t _now = time(NULL);                                                  \
     struct tm _tm;                                                             \
@@ -22,11 +22,8 @@
     fprintf(stderr, "[%s][%s:%d] " fmt "\n", _buf, __FILE__, __LINE__,         \
             ##__VA_ARGS__);                                                    \
   } while (0)
-#define FAA_LOG(MSG, ...) __FAA_LOG(MSG, ##__VA_ARGS__)
+#define DEBUG_LOG(MSG, ...) __DEBUG_LOG(MSG, ##__VA_ARGS__)
 #else
-#define FAA_LOG(MSG, ...)                                                      \
-  do {                                                                         \
-  } while (0)
 #endif
 
 /* Node entry */

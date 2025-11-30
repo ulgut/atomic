@@ -112,7 +112,7 @@ void *client_service_thread(void *arg) {
         return NULL;
     }
 
-    FAA_LOG("Node %d: Client service listening on %s:%d", host_id,
+    DEBUG_LOG("Node %d: Client service listening on %s:%d", host_id,
             inet_ntoa(server_addr.sin_addr), service_port);
 
     int client_count = 0;
@@ -158,7 +158,7 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    FAA_LOG("Node %d: Starting", host_id);
+    DEBUG_LOG("Node %d: Starting", host_id);
 
     struct node_ctx ctx;
     struct config c = {
@@ -169,11 +169,11 @@ int main(int argc, char *argv[]) {
     };
 
     if (node_init(&ctx, &c) != 0) {
-        FAA_LOG("Node %d: node_init failed", host_id);
+        DEBUG_LOG("Node %d: node_init failed", host_id);
         return 1;
     }
 
-    FAA_LOG("Node %d: RDMA cluster initialized", host_id);
+    DEBUG_LOG("Node %d: RDMA cluster initialized", host_id);
 
     // Start client service thread
     pthread_t service_thread;
@@ -184,7 +184,7 @@ int main(int argc, char *argv[]) {
         return 1;
     }
 
-    FAA_LOG("Node %d: Client service started", host_id);
+    DEBUG_LOG("Node %d: Client service started", host_id);
 
     // Wait for service thread
     pthread_join(service_thread, NULL);

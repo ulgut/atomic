@@ -28,14 +28,14 @@ int __add_qp(struct rdma_ctx *r, int id, int port_num, int frontier) {
         .port_num = port_num,
     };
     if (!(qp[id] = ibv_create_qp(r->pd, &init_attr))) {
-        FAA_LOG("ibv_create_qp failed");
+        DEBUG_LOG("ibv_create_qp failed");
         return -errno;
     }
     if (ibv_modify_qp(qp[id], &attr,
                       IBV_QP_STATE | IBV_QP_PKEY_INDEX | IBV_QP_PORT |
                           IBV_QP_ACCESS_FLAGS)) {
         ibv_destroy_qp(qp[id]);
-        FAA_LOG("ibv_modify_qp failed");
+        DEBUG_LOG("ibv_modify_qp failed");
         return -errno;
     }
     if (!ibv_query_qp(qp[id], &attr, IBV_QP_CAP, &init_attr))
@@ -52,20 +52,20 @@ int rdma_init(struct rdma_ctx *r, struct config *c) {
     uint16_t gid_index = host_cfg->gid_index;
 
     if (!(dev_list = ibv_get_device_list(NULL))) {
-        FAA_LOG("ibv_get_device_list failed");
+        DEBUG_LOG("ibv_get_device_list failed");
         goto exit;
     }
 
     // open rdma device
     if (!(r->ctx = ibv_open_device(dev_list[c->rdma_device]))) {
-        FAA_LOG("ibv_open_device failed");
+        DEBUG_LOG("ibv_open_device failed");
         ibv_free_device_list(dev_list);
         goto exit;
     }
     ibv_free_device_list(dev_list);
 
     if (ibv_query_gid(r->ctx, port_num, gid_index, &gid)) {
-        FAA_LOG("ibv_query_gid failed");
+        DEBUG_LOG("ibv_query_gid failed");
         goto exit;
     }
 
@@ -73,13 +73,13 @@ int rdma_init(struct rdma_ctx *r, struct config *c) {
     for (int i = 0; i < 16; ++i) r->gid[i] = gid.raw[i];
 
     if (ibv_query_port(r->ctx, port_num, &pa)) {
-        FAA_LOG("ibv_query_port failed");
+        DEBUG_LOG("ibv_query_port failed");
         goto exit;
     }
     r->lid = pa.lid;
 
     if (!(r->pd = ibv_alloc_pd(r->ctx))) {
-        FAA_LOG("ibv_alloc_pd failed");
+        DEBUG_LOG("ibv_alloc_pd failed");
         goto exit;
     }
 
@@ -95,7 +95,7 @@ int rdma_init(struct rdma_ctx *r, struct config *c) {
                    IBV_ACCESS_LOCAL_WRITE | IBV_ACCESS_REMOTE_READ |
                        IBV_ACCESS_REMOTE_WRITE | IBV_ACCESS_REMOTE_ATOMIC);
     if (!r->mr[0]) {
-        FAA_LOG("Failed to register memory region");
+        DEBUG_LOG("Failed to register memory region");
         goto errslots;
     }
 
@@ -107,19 +107,19 @@ int rdma_init(struct rdma_ctx *r, struct config *c) {
     }
     r->mr[1] = ibv_reg_mr(r->pd, r->results, nb, IBV_ACCESS_LOCAL_WRITE);
     if (!r->mr[1]) {
-        FAA_LOG("Failed to register memory region");
+        DEBUG_LOG("Failed to register memory region");
         goto errres;
     }
 
     // allocate completion queue for consensus
     if (!(r->cq = ibv_create_cq(r->ctx, 1024, NULL, NULL, 0))) {
-        FAA_LOG("ibv_create_cq failed");
+        DEBUG_LOG("ibv_create_cq failed");
         goto errmr2;
     }
 
     // allocate completion queue for frontier operations
     if (!(r->fcq = ibv_create_cq(r->ctx, 16, NULL, NULL, 0))) {
-        FAA_LOG("ibv_create_cq (frontier) failed");
+        DEBUG_LOG("ibv_create_cq (frontier) failed");
         goto errcq;
     }
 
@@ -138,11 +138,11 @@ int rdma_init(struct rdma_ctx *r, struct config *c) {
     int i = 0;
     for (; i < c->n; ++i) {
         if (i != c->host_id && __add_qp(r, i, c->c[i].ib_port, 0)) {
-            FAA_LOG("Failed to create QP %d", i);
+            DEBUG_LOG("Failed to create QP %d", i);
             goto errra;
         }
         if (__add_qp(r, i, c->c[i].ib_port, 1)) {
-            FAA_LOG("Failed to create QP %d", i);
+            DEBUG_LOG("Failed to create QP %d", i);
             goto errra;
         }
     }

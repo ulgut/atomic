@@ -95,7 +95,7 @@ int __qp_connect(struct rdma_ctx *r, struct node_config *c,
                             IBV_QP_DEST_QPN | IBV_QP_RQ_PSN |
                             IBV_QP_MAX_DEST_RD_ATOMIC | IBV_QP_MIN_RNR_TIMER);
     if (ret) {
-        FAA_LOG("Failed to set QP to RTR state");
+        DEBUG_LOG("Failed to set QP to RTR state");
         return ret;
     }
 
@@ -113,7 +113,7 @@ int __qp_connect(struct rdma_ctx *r, struct node_config *c,
                         IBV_QP_STATE | IBV_QP_TIMEOUT | IBV_QP_RETRY_CNT |
                             IBV_QP_RNR_RETRY | IBV_QP_SQ_PSN |
                             IBV_QP_MAX_QP_RD_ATOMIC);
-    if (ret) FAA_LOG("Failed to set QP to RTS state");
+    if (ret) DEBUG_LOG("Failed to set QP to RTS state");
 
     return ret;
 }
@@ -154,7 +154,7 @@ void *__server_thread(void *ptr) {
         goto err;
     }
 
-    FAA_LOG("Server listening on %s:%d", inet_ntoa(server.sin_addr), host_port);
+    DEBUG_LOG("Server listening on %s:%d", inet_ntoa(server.sin_addr), host_port);
 
     // Accept connections from higher-ranked peers
     size_t expected_clients = c->n - c->host_id - 1;
@@ -163,7 +163,7 @@ void *__server_thread(void *ptr) {
         if (clientfd < 0)
             perror("accept:");
         else {
-            FAA_LOG("Established connection with %s",
+            DEBUG_LOG("Established connection with %s",
                     inet_ntoa(client.sin_addr));
 
             // Read incoming peer ID.
@@ -173,7 +173,7 @@ void *__server_thread(void *ptr) {
                 continue;
             }
             id = ntohs(id);
-            FAA_LOG("Server received client ID = %d", id);
+            DEBUG_LOG("Server received client ID = %d", id);
 
             // get local attributes for this host
             __get_local_attr(r, &local, id, 0);
@@ -197,7 +197,7 @@ void *__server_thread(void *ptr) {
             RA_FROM_NET(r->ra + id);
 
             if (__qp_connect(r, c->c + id, r->ra + id, 0)) {
-                FAA_LOG("QP connection failed");
+                DEBUG_LOG("QP connection failed");
                 close(clientfd);
                 *ret = 2;
                 goto err;
@@ -213,7 +213,7 @@ void *__server_thread(void *ptr) {
                 *ret = errno;
                 goto err;
             }
-            FAA_LOG("[%hu] Sent frontier attributes to node %hu\n", c->host_id,
+            DEBUG_LOG("[%hu] Sent frontier attributes to node %hu\n", c->host_id,
                     id);
             memset(&local, 0, sizeof(local));
             // read frontier attributes from remote peer
@@ -226,15 +226,15 @@ void *__server_thread(void *ptr) {
             RA_FROM_NET(&local);
             // connect queue pairs
             if (__qp_connect(r, c->c + id, &local, 1)) {
-                FAA_LOG("QP connection failed");
+                DEBUG_LOG("QP connection failed");
                 close(clientfd);
                 *ret = 2;
                 goto err;
             }
-            FAA_LOG("[%hu] Connected frontier QP to node %hu\n", c->host_id,
+            DEBUG_LOG("[%hu] Connected frontier QP to node %hu\n", c->host_id,
                     id);
 
-            FAA_LOG("RDMA exchange with node %d success", id);
+            DEBUG_LOG("RDMA exchange with node %d success", id);
             close(clientfd);
         }
     }
@@ -278,17 +278,17 @@ void *__client_thread(void *ptr) {
             break;
         } else {
             perror("connect");
-            FAA_LOG("Connection failed. Retrying...");
+            DEBUG_LOG("Connection failed. Retrying...");
         }
     }
     if (i >= MAX_RETRIES) {
-        FAA_LOG("Host unreachable.");
+        DEBUG_LOG("Host unreachable.");
         *ret = 1;
         goto exit;
     }
 
     /* Connection established. Exchange attributes */
-    FAA_LOG("Established connection with node %d", id);
+    DEBUG_LOG("Established connection with node %d", id);
 
     // write peer id to server
     uint16_t hostid = htons(c->host_id);
@@ -316,7 +316,7 @@ void *__client_thread(void *ptr) {
     RA_FROM_NET(r->ra + id);
     // connect queue pairs
     if (__qp_connect(r, c->c + id, r->ra + id, 0)) {
-        FAA_LOG("QP connection failed");
+        DEBUG_LOG("QP connection failed");
         *ret = 2;
         goto exit;
     }
@@ -341,18 +341,18 @@ void *__client_thread(void *ptr) {
         goto exit;
     }
     RA_FROM_NET(&local);
-    FAA_LOG("[%hu] Received frontier RA from node %d", c->host_id, id);
+    DEBUG_LOG("[%hu] Received frontier RA from node %d", c->host_id, id);
 
     // connect queue pairs
     if (__qp_connect(r, c->c + id, &local, 1)) {
-        FAA_LOG("QP connection failed");
+        DEBUG_LOG("QP connection failed");
         *ret = 2;
         goto exit;
     }
 
-    FAA_LOG("[%hu] connected frontier QP to node %d", c->host_id, id);
+    DEBUG_LOG("[%hu] connected frontier QP to node %d", c->host_id, id);
 
-    FAA_LOG("RDMA exchange with node %d success", id);
+    DEBUG_LOG("RDMA exchange with node %d success", id);
 exit:
     close(sockfd);
     pthread_exit(NULL);
@@ -384,7 +384,7 @@ int rdma_handshake(struct rdma_ctx *r) {
     /* Client threads block here */
     for (size_t i = 0; i < c->host_id; ++i) {
         pthread_join(ct[i], NULL);
-        FAA_LOG("Client thread exited with status %d", ca[i].ret);
+        DEBUG_LOG("Client thread exited with status %d", ca[i].ret);
         if (ca[i].ret) {
             return ca[i].ret;
         }
