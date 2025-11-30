@@ -113,6 +113,32 @@ int64_t test_and_set(struct node_ctx *ctx, uint32_t slot) {
     return -1;
 }
 
+int64_t test_and_set(struct node_ctx *ctx) {
+    // TODO
+    return ctx->id;
+}
+
+int64_t reset(struct node_ctx *ctx) {
+    // TODO
+    return ctx->id;
+}
+
+uint32_t get_frontier_slot(struct node_ctx *ctx) {
+    // TODO
+    return ctx->id;
+}
+
+int run_fast_paxos(struct node_ctx *ctx, uint32_t slot) {
+    // TODO
+    return ctx->id + slot;
+}
+
+int advance_frontier_slot(struct node_ctx *ctx, uint32_t new_slot) {
+    // TODO
+    return ctx->id + new_slot;
+}
+
+
 int node_init(struct node_ctx *ctx, struct config *c) {
     ctx->id = c->host_id;
     ctx->seed = (uint32_t)time(0) ^ (uint32_t)ctx->id;

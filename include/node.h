@@ -27,6 +27,17 @@ void node_destroy(struct node_ctx *ctx);
 int64_t fetch_and_add(struct node_ctx *ctx);
 int64_t test_and_set(struct node_ctx *ctx, uint32_t slot);
 
+/* Refined TAS operation */
+int64_t test_and_set(struct node_ctx *ctx);
+/* Refined Reset operation */
+int64_t reset(struct node_ctx *ctx);
+/* Performs a quorum read across replicas to fetch maximum frontier slot. */
+uint32_t get_frontier_slot(struct node_ctx *ctx);
+/* Attempts to advance the frontier slot on all replicas to {new_slot}. */
+int advance_frontier_slot(struct node_ctx *ctx, uint32_t new_slot);
+/* Runs FastPaxos on slot {slot} at the node referenced by {ctx}. */
+int run_fast_paxos(struct node_ctx *ctx, uint32_t slot);
+
 #ifdef TRACK_SLOTS
 #include <stdio.h>
 #define DUMP_CSV(fp, ctx)                                                      \
