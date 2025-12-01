@@ -11,29 +11,19 @@
 
 static const struct node_config net_cfg[] = {
     {
-        // 10.10.1.1 – node 0
-        .ip = {10, 10, 1, 1},
+        .ip = {2, 1, 10, 10},
         .id = 0,
         .tcp_port = TCP_PORT,
         .ib_port = IB_PORT,
         .gid_index = GID_IDX,
     },
     {
-        // 10.10.1.2 – node 1
-        .ip = {10, 10, 1, 2},
+        .ip = {3, 1, 10, 10},
         .id = 1,
         .tcp_port = TCP_PORT,
         .ib_port = IB_PORT,
         .gid_index = GID_IDX,
     },
-    {
-        // 10.10.1.3 – node 2
-        .ip = {10, 10, 1, 3},
-        .id = 2,
-        .tcp_port = TCP_PORT,
-        .ib_port = IB_PORT,
-        .gid_index = GID_IDX,
-    }
     // {
     //     .ip = {5, 1, 10, 10},
     //     .id = 3,

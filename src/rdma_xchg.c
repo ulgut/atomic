@@ -145,6 +145,7 @@ void *__server_thread(void *ptr) {
     server.sin_port = htons(host_port);
 
     if (bind(serverfd, (struct sockaddr *)&server, sizeof(server)) < 0) {
+        DEBUG_LOG("Failed to bind [%d] on [%d:%d]", serverfd, host_ip, host_port);
         perror("bind:");
         goto err;
     }
