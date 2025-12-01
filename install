@@ -1,0 +1,8 @@
+#!/bin/bash
+
+sudo apt-get update --yes
+sudo apt-get install rdma-core libibverbs-dev librdmacm-dev ibverbs-utils --yes
+
+make clean
+make
+sudo make install
