@@ -3,6 +3,7 @@
 
 #include <infiniband/verbs.h>
 #include <stdint.h>
+#include <stdbool.h>
 
 #include "config.h"
 
@@ -78,8 +79,7 @@ static inline uint64_t gen_ballot(uint16_t node_id) {
 }
 
 /* Wait for {num_posted} RDMA operations to complete */
-int rdma_await_completions(struct rdma_ctx *r, int num_posted, int min_required, 
-                         int require_success, struct ibv_wc *results);
+int rdma_await_completions(struct rdma_ctx *r, int num_posted, int min_required, bool require_success, struct ibv_wc *results);
 /* Generic RDMA WRITE to a replica's shared memory at {offset}, stored in {result_buf}.*/
 int rdma_write(struct rdma_ctx *r, int remote_idx, size_t offset, uint64_t value, uint64_t *local_buf);
 

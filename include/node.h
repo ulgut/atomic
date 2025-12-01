@@ -31,7 +31,7 @@ int64_t reset(struct node_ctx *ctx);
 /* Performs a quorum read across replicas to fetch maximum frontier slot. */
 uint32_t get_frontier_slot(struct node_ctx *ctx);
 /* Attempts to advance the frontier slot on all replicas to {new_slot}. */
-int advance_frontier_slot(struct node_ctx *ctx, uint32_t new_slot);
+int advance_frontier(struct node_ctx *ctx, uint32_t new_slot);
 /* Runs FastPaxos on slot {slot} at the node referenced by {ctx}. */
 int run_fast_paxos(struct node_ctx *ctx, uint32_t slot);
 
@@ -46,5 +46,10 @@ int run_fast_paxos(struct node_ctx *ctx, uint32_t slot);
                 (ctx)->s[i].path, (ctx)->s[i].won);                            \
   } while (0)
 #endif
+
+/* Fetches minimum quorum size for FastPaxos fast-path (≥75%) */
+#define FAST_QUORUM(c) ((c->n * 3 + 3) / 4)
+/* Fetches minimum quorum size for FastPaxos slow-path (>50%) */
+#define CLASSIC_QUORUM(c) (((c)->n / 2) + 1)
 
 #endif /* NODE_H */

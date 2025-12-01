@@ -1,3 +1,4 @@
+#include "atomic.h"
 #include "node.h"
 
 #include <immintrin.h>
@@ -86,13 +87,41 @@ int64_t test_and_set(struct node_ctx *ctx, uint32_t slot) {
 }
 
 int64_t reset(struct node_ctx *ctx) {
-    // TODO
+    // struct rdma_ctx* r = &ctx->r;
+    // struct config* cfg = r->c;
+    
+    // // Fetch the frontier slot
+    // uint32_t frontier = get_frontier_slot(ctx);
     return ctx->id;
 }
 
 uint32_t get_frontier_slot(struct node_ctx *ctx) {
-    // TODO
-    return ctx->id;
+    struct rdma_ctx* r = &ctx->r;
+    struct config* cfg = r->c;
+
+    uint64_t frontiers[cfg->n];
+    for (int n = 0; n < cfg->n; ++n) {
+        frontiers[n] = 0; // zero out
+        if (n != cfg->host_id) {
+            DEBUG_LOG("Performing rdma_read() on replica [%d] with offset [%ld]", n, FRONTIER_OFFSET(r));
+            if (rdma_read(r, n, FRONTIER_OFFSET(r), frontiers + n)) {
+                DEBUG_LOG("Failed performing rdma_read() on replica [%d] with offset [%ld]", n, FRONTIER_OFFSET(r));
+                perror("Failed rdma_read");
+                return -1;
+            };
+        }
+    }
+
+    // Await completions
+    rdma_await_completions(r, cfg->n - 1, FAST_QUORUM(cfg), true, NULL);
+
+    uint64_t frontier_slot = 0;
+    for (int n = 0; n < cfg->n; ++n) {
+        if (frontiers[n] > frontier_slot) {
+            frontier_slot = frontiers[n];
+        }
+    }
+    return frontier_slot;
 }
 
 int run_fast_paxos(struct node_ctx *ctx, uint32_t slot) {
@@ -100,7 +129,7 @@ int run_fast_paxos(struct node_ctx *ctx, uint32_t slot) {
     return ctx->id + slot;
 }
 
-int advance_frontier_slot(struct node_ctx *ctx, uint32_t new_slot) {
+int advance_frontier(struct node_ctx *ctx, uint32_t new_slot) {
     // TODO
     return ctx->id + new_slot;
 }

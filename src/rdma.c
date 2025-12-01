@@ -9,11 +9,6 @@
 /* Max scatter-gather entries */
 #define MAX_SGE (1 << 1)
 
-/* Shared memory byte offset for frontier */
-#define FRONTIER_OFFSET(r) offsetof(typeof(*(r)->shared_mem), frontier)
-/* Shared memory byte offset for {slot} */
-#define SLOT_OFFSET(r, slot) (offsetof(typeof(*(r)->shared_mem), slots) + ((slot) * sizeof(uint64_t)))
-
 extern int rdma_handshake(struct rdma_ctx *r, struct config *c);
 
 int __add_qp(struct rdma_ctx *r, int id, int port_num, int frontier) {
@@ -336,7 +331,7 @@ int rdma_write(struct rdma_ctx *r, int remote_idx, size_t offset, uint64_t value
 
 /* Wait for {num_posted} RDMA operations to complete */
 int rdma_await_completions(struct rdma_ctx *r, int num_posted, int min_required, 
-                         int require_success, struct ibv_wc *results) {
+                         bool require_success, struct ibv_wc *results) {
     struct ibv_wc wc[num_posted];
     int completed = 0;
     int successful = 0;
@@ -346,6 +341,8 @@ int rdma_await_completions(struct rdma_ctx *r, int num_posted, int min_required,
         if (n > 0) {
             for (int i = 0; i < n; ++i) {
                 int remote_idx = wc[i].wr_id;
+                // Results can be null if we don't care about result
+                // Driver will populate the result buffer we provided in the initial call
                 if (results != NULL) {
                     results[remote_idx] = wc[i];
                 }

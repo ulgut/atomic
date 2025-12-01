@@ -1,10 +1,8 @@
 #include <immintrin.h>
 #include <pthread.h>
 
+#include "atomic.h"
 #include "rdma.h"
-
-#define FAST_QUORUM(c) ((c->n * 3 + 3) / 4)
-#define CLASSIC_QUORUM(c) (((c)->n / 2) + 1)
 
 /* Get per-thread results buffer */
 static inline uint64_t *get_thread_results(struct rdma_ctx *r) {
