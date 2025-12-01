@@ -77,4 +77,17 @@ static inline uint64_t gen_ballot(uint16_t node_id) {
   return (ts << 16) | node_id;
 }
 
+/* Wait for {num_posted} RDMA operations to complete */
+int rdma_await_completions(struct rdma_ctx *r, int num_posted, int min_required, 
+                         int require_success, struct ibv_wc *results);
+/* Generic RDMA WRITE to a replica's shared memory at {offset}, stored in {result_buf}.*/
+int rdma_write(struct rdma_ctx *r, int remote_idx, size_t offset, uint64_t value, uint64_t *local_buf);
+
+/* Generic RDMA CAS on a replica's shared memory at {offset}, stored in {result_buf}.*/
+int rdma_cas(struct rdma_ctx *r, int remote_idx, size_t offset, 
+             uint64_t expected, uint64_t swap, uint64_t *result_buf);
+
+/* Generic RDMA READ from a replica's shared memory at {offset}, stored in {result_buf}.*/
+int rdma_read(struct rdma_ctx *r, int replica_idx, size_t offset, uint64_t *result_buf);
+
 #endif /* RDMA_H */

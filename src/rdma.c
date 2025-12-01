@@ -9,6 +9,11 @@
 /* Max scatter-gather entries */
 #define MAX_SGE (1 << 1)
 
+/* Shared memory byte offset for frontier */
+#define FRONTIER_OFFSET(r) offsetof(typeof(*(r)->shared_mem), frontier)
+/* Shared memory byte offset for {slot} */
+#define SLOT_OFFSET(r, slot) (offsetof(typeof(*(r)->shared_mem), slots) + ((slot) * sizeof(uint64_t)))
+
 extern int rdma_handshake(struct rdma_ctx *r, struct config *c);
 
 int __add_qp(struct rdma_ctx *r, int id, int port_num, int frontier) {
@@ -241,4 +246,123 @@ void rdma_destroy(struct rdma_ctx *r) {
     r->shared_mem = NULL;
     r->results = NULL;
     r->prepares = NULL;
+}
+
+/* Generic RDMA READ from a replica's shared memory at {offset}, stored in {result_buf}.*/
+int rdma_read(struct rdma_ctx *r, int replica_idx, size_t offset, uint64_t *result_buf) {
+    struct remote_attr *ra = r->ra + replica_idx;
+    uint64_t remote_addr = ra->addr + offset;
+    
+    struct ibv_sge sge = {
+        .addr = (uint64_t)result_buf,
+        .length = sizeof(uint64_t),
+        .lkey = r->mr[1]->lkey
+    };
+    
+    struct ibv_send_wr wr = {
+        .wr_id = replica_idx,
+        .sg_list = &sge,
+        .num_sge = 1,
+        .opcode = IBV_WR_RDMA_READ,
+        .send_flags = IBV_SEND_SIGNALED,
+        .wr.rdma = {
+            .remote_addr = remote_addr,
+            .rkey = ra->rkey
+        }
+    };
+    
+    struct ibv_send_wr *bad_wr = NULL;
+    return ibv_post_send(r->qp[replica_idx], &wr, &bad_wr);
+}
+
+/* Generic RDMA CAS on a replica's shared memory at {offset}, stored in {result_buf}.*/
+int rdma_cas(struct rdma_ctx *r, int remote_idx, size_t offset, 
+             uint64_t expected, uint64_t swap, uint64_t *result_buf) {
+    struct remote_attr *ra = r->ra + remote_idx;
+    uint64_t remote_addr = ra->addr + offset;
+    
+    struct ibv_sge sge = {
+        .addr = (uint64_t)result_buf,
+        .length = sizeof(uint64_t),
+        .lkey = r->mr[1]->lkey
+    };
+    
+    struct ibv_send_wr wr = {
+        .wr_id = remote_idx,
+        .sg_list = &sge,
+        .num_sge = 1,
+        .opcode = IBV_WR_ATOMIC_CMP_AND_SWP,
+        .send_flags = IBV_SEND_SIGNALED,
+        .wr.atomic = {
+            .remote_addr = remote_addr,
+            .rkey = ra->rkey,
+            .compare_add = expected,
+            .swap = swap
+        }
+    };
+    
+    struct ibv_send_wr *bad_wr = NULL;
+    return ibv_post_send(r->qp[remote_idx], &wr, &bad_wr);
+}
+
+/* Generic RDMA WRITE to a replica's shared memory at {offset}, stored in {result_buf}.*/
+int rdma_write(struct rdma_ctx *r, int remote_idx, size_t offset, uint64_t value, uint64_t *local_buf) {
+    struct remote_attr *ra = r->ra + remote_idx;
+    uint64_t remote_addr = ra->addr + offset;
+    
+    *local_buf = value;  // Store value in local buffer
+    
+    struct ibv_sge sge = {
+        .addr = (uint64_t)local_buf,
+        .length = sizeof(uint64_t),
+        .lkey = r->mr[1]->lkey
+    };
+    
+    struct ibv_send_wr wr = {
+        .wr_id = remote_idx,
+        .sg_list = &sge,
+        .num_sge = 1,
+        .opcode = IBV_WR_RDMA_WRITE,
+        .send_flags = IBV_SEND_SIGNALED,
+        .wr.rdma = {
+            .remote_addr = remote_addr,
+            .rkey = ra->rkey
+        }
+    };
+    
+    struct ibv_send_wr *bad_wr = NULL;
+    return ibv_post_send(r->qp[remote_idx], &wr, &bad_wr);
+}
+
+/* Wait for {num_posted} RDMA operations to complete */
+int rdma_await_completions(struct rdma_ctx *r, int num_posted, int min_required, 
+                         int require_success, struct ibv_wc *results) {
+    struct ibv_wc wc[num_posted];
+    int completed = 0;
+    int successful = 0;
+
+    while (completed < num_posted) {
+        int n = ibv_poll_cq(r->cq, num_posted - completed, wc);
+        if (n > 0) {
+            for (int i = 0; i < n; ++i) {
+                int remote_idx = wc[i].wr_id;
+                if (results != NULL) {
+                    results[remote_idx] = wc[i];
+                }
+
+                if (wc[i].status == IBV_WC_SUCCESS) {
+                    successful++;
+                }
+            }
+            completed += n;
+
+            // Exit if we have enough completions for a quorum
+            int total = require_success ? successful : completed;
+            if (total >= min_required) {
+                return require_success ? successful : completed;
+            }
+        }
+    }
+
+    return require_success ? successful : completed;
 }
